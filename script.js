@@ -1,57 +1,55 @@
-const books = [
-    { title: "The Great Gatsby", available: true },
-    { title: "1984", available: true },
-    { title: "To Kill a Mockingbird", available: true },
-    { title: "Moby Dick", available: true }
-];
-const borrowedBooks = [];
-
 document.addEventListener("DOMContentLoaded", () => {
-    renderBooks();
-});
+    const libraryDiv = document.getElementById("library");
+    const bookForm = document.getElementById("bookForm");
+    
+    let books = [
+        { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", year: 1925, available: true },
+        { id: 2, title: "1984", author: "George Orwell", year: 1949, available: true },
+        { id: 3, title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, available: true }
+    ];
 
-function renderBooks() {
-    const bookList = document.getElementById("book-list");
-    bookList.innerHTML = "";
-    books.forEach((book, index) => {
-        if (book.available) {
+    function displayBooks() {
+        libraryDiv.innerHTML = ""; 
+
+        books.forEach(book => {
             const bookDiv = document.createElement("div");
             bookDiv.classList.add("book");
+
             bookDiv.innerHTML = `
-                <span>${book.title}</span>
-                <button class="borrow" onclick="borrowBook(${index})">Borrow</button>
+                <h2>${book.title}</h2>
+                <p><strong>Author:</strong> ${book.author}</p>
+                <p><strong>Year:</strong> ${book.year}</p>
+                <p><strong>Status:</strong> ${book.available ? "Available" : "Borrowed"}</p>
+                <button class="borrow" onclick="borrowBook(${book.id})" ${book.available ? "" : "disabled"}>
+                    Borrow
+                </button>
             `;
-            bookList.appendChild(bookDiv);
+
+            libraryDiv.appendChild(bookDiv);
+        });
+    }
+
+    window.borrowBook = function(bookId) {
+        const book = books.find(b => b.id === bookId);
+        if (book && book.available) {
+            book.available = false;
+            displayBooks();
+        }
+    };
+
+    bookForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+
+        const title = document.getElementById("title").value;
+        const author = document.getElementById("author").value;
+        const year = parseInt(document.getElementById("year").value);
+
+        if (title && author && year) {
+            books.push({ id: books.length + 1, title, author, year, available: true });
+            displayBooks();
+            bookForm.reset();
         }
     });
-    renderBorrowedBooks();
-}
 
-function renderBorrowedBooks() {
-    const borrowedList = document.getElementById("borrowed-list");
-    borrowedList.innerHTML = "";
-    borrowedBooks.forEach((book, index) => {
-        const bookDiv = document.createElement("div");
-        bookDiv.classList.add("borrowed-book");
-        bookDiv.innerHTML = `
-            <span>${book.title}</span>
-            <button class="return" onclick="returnBook(${index})">Return</button>
-        `;
-        borrowedList.appendChild(bookDiv);
-    });
-}
-
-function borrowBook(index) {
-    borrowedBooks.push(books[index]);
-    books[index].available = false;
-    renderBooks();
-}
-
-function returnBook(index) {
-    const bookTitle = borrowedBooks[index].title;
-    const bookIndex = books.findIndex(book => book.title === bookTitle);
-    books[bookIndex].available = true;
-    borrowedBooks.splice(index, 1);
-    renderBooks();
-}
-
+    displayBooks();
+});
